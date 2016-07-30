@@ -1,6 +1,10 @@
 package com.zombymatthew.flipper;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -9,22 +13,44 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.configuration2.XMLConfiguration;
 
 public class App 
 {
-  protected Path watchPath = null;
-  protected XMLConfiguration xmlConfig = null;
+  protected static Path watchPath = null;
 
   public static void main (String [] args) throws Exception
   {
     parseArguments (args);
+    FlipperLog log = new FlipperLog (watchPath);
     
-
-
-    Flipper flip = new Flipper (null);
+    File configFile = watchPath.resolve ("config.properties").toFile ();
+    if (!configFile.exists ())
+      System.out.println ("Error: " + configFile.getAbsolutePath () + " does not exist.");
+    else
+    {
+      Properties props = getConfiguration (configFile);
+      Flipper flip = new Flipper (watchPath, props, log);
+      flip.run ();
+    }
   }
  
+  private static Properties getConfiguration (File propertiesFile)
+  {
+    try
+    {
+      FileInputStream fis = new FileInputStream (propertiesFile);
+      Properties props = new Properties();
+      props.load (fis);
+      return props;
+    }
+
+    catch(Exception ex)
+    {
+      System.err.println ("Loading of file " + propertiesFile + " has failed: " + ex.getMessage ());
+      System.exit (1);
+      return null;
+    }
+  }
   
   private static void parseArguments (String [] args)
   {
@@ -44,7 +70,7 @@ public class App
     }
     catch (ParseException e) 
     {
-      System.out.println(e.getMessage());
+      System.err.println (e.getMessage ());
       formatter.printHelp("flipper", options);
 
       System.exit(1);
@@ -52,7 +78,19 @@ public class App
     }
 
     String directory = cmd.getOptionValue ("p");
-    
+    Path p = Paths.get (directory);
+    File f = p.toFile ();
+    if (!f.exists () || !f.isDirectory ())
+    {
+      System.err.println ("Error: " + f.getAbsolutePath () + " either does not exist or is not a directory.");
+      System.exit (1);
+      return;
+    }
+    else 
+    {
+      watchPath = p;
+      return;
+    }
   }
   
   
