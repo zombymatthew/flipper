@@ -24,9 +24,6 @@ public class Flipper
   public void run ()
   {
      importer = ImporterFactory.getImporter (config, pathToScan, log); 
-     log.debug ("testing");
-
      importer.doImport ();
-    
   }
 }
