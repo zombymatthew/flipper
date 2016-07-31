@@ -1,17 +1,22 @@
 package com.zombymatthew.flipper;
 
+import static java.nio.file.StandardOpenOption.CREATE;
+import static java.nio.file.StandardOpenOption.WRITE;
+import static java.nio.file.StandardOpenOption.APPEND;
+
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class FlipperLog
 {
-  private File logFile;
-  private boolean toFile = false;
-  private boolean timestamp = false;
+  private Path logFilePath;
+  private boolean toFile = true;
+  private boolean timestamp = true;
   private boolean debug = true;
-  private boolean verbose = false;
+  //private boolean verbose = false;
 
   public FlipperLog (Path rootPath) throws Exception
   {
@@ -22,34 +27,66 @@ public class FlipperLog
     File logFolderFile = logFolder.toFile ();
     if (!logFolderFile.exists ())
       logFolderFile.mkdir ();
-    File logFile = logFolder.resolve (logFileName).toFile (); 
+    logFilePath = logFolder.resolve (logFileName);
+    File logFile = logFilePath.toFile (); 
     if (logFile.exists ())
       System.err.println ("Error: " + logFile.getAbsolutePath () + " file already exists." );
     else
-    {
       logFile.createNewFile ();
-      this.logFile = logFile;
-    }
   }
 
-  public void error (String message)
+  public void error (String message) throws Exception
   {
-    System.err.println (message);
+    String mess = addTimestamp (message);
+    logToFile (mess);
+    System.err.println (mess);
   }
 
-  public void error (Exception ex)
+  public void error (Exception ex, String message) throws Exception
   {
-    System.err.println ("Error: " + ex.getMessage ());
+    String mess = addTimestamp (message + ": " + ex.getMessage ());
+    logToFile (mess);
+    System.err.println ();
+  }
+
+  public void error (Exception ex) throws Exception
+  {
+    String mess = addTimestamp ("Error: " + ex.getMessage ());
+    logToFile (mess);
+    System.err.println (mess);
   }
   
-  public void debug (String message)
+  public void debug (String message) throws Exception
   {
     if (debug)
+    {
+      String mess = addTimestamp (message);
+      logToFile (mess);
       System.out.println (message); 
+    }
   }
   
-  public void console (String message)
+  public void console (String message) throws Exception
   {
+    String mess = addTimestamp (message);
+    logToFile (mess);
     System.out.println (message);
+  }
+  
+  private String addTimestamp (String message)
+  {
+    if (timestamp)
+      return new Date().toString () + " - " + message;
+    else
+      return message;
+  }
+
+  private void logToFile (String message) throws Exception
+  {
+    if (toFile)
+    {
+      byte [] b = (message + "\n").getBytes ();
+      Files.write (logFilePath, b, CREATE, WRITE, APPEND); 
+    }
   }
 }

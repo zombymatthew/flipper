@@ -10,7 +10,7 @@ import com.zombymatthew.flipper.FlipperLog;
 
 public class ImporterFactory
 {
-  public static FlipperImporter getImporter (Properties config, Path rootPath, FlipperLog log)
+  public static FlipperImporter getImporter (Properties config, Path rootPath, FlipperLog log) throws Exception
   {
     String type = config.getProperty (CONFIG.TYPE);
     String destination = config.getProperty (CONFIG.DESTINATION);
@@ -21,7 +21,22 @@ public class ImporterFactory
 
     if (type.equals (CONFIG.PICTURE_TYPE))
     {
-      PictureImporter pictImport = new PictureImporter (rootPath, log, destinationPath);
+      String movieDest = config.getProperty (CONFIG.PICTURES.MOVIE_DESTINATION);
+      if (movieDest == null || movieDest.length () == 0)
+      {
+        log.error ("Movie destination path not set"); 
+        return null;
+      }
+      Path movieDestPath = Paths.get (movieDest);
+      PictureImporter pictImport = new PictureImporter (rootPath, log, destinationPath, movieDestPath);
+      
+      String picturePathTemplate = config.getProperty (CONFIG.PICTURES.PICTURE_PATH_TEMPLATE);
+      if (picturePathTemplate != null && picturePathTemplate.length () > 0)
+        pictImport.setPicturePathTemplate (picturePathTemplate);
+      
+      String moviePathTemplate = config.getProperty (CONFIG.PICTURES.MOVIE_PATH_TEMPLATE);
+      if (moviePathTemplate != null && moviePathTemplate.length () > 0)
+        pictImport.setMoviePathTemplate (moviePathTemplate);
       
       
       return pictImport;

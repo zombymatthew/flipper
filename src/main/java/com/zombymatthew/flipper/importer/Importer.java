@@ -17,9 +17,9 @@ public abstract class Importer
     this.log = log;
   }
   
-  protected abstract void processFile (File file);
+  protected abstract void processFile (File file) throws Exception;
   
-  protected void processDirectory (File directory)
+  protected void processDirectory (File directory) throws Exception
   {
     if (!directory.isDirectory ())
       log.error ("File found where a directory should be.");
@@ -36,7 +36,7 @@ public abstract class Importer
     }
   }
   
-  protected void processFiles (File [] files)
+  protected void processFiles (File [] files) throws Exception
   {
     for (File file: files)
     {

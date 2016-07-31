@@ -21,7 +21,7 @@ public class Flipper
     this.log = log;
   }
   
-  public void run ()
+  public void run () throws Exception
   {
      importer = ImporterFactory.getImporter (config, pathToScan, log); 
      importer.doImport ();
