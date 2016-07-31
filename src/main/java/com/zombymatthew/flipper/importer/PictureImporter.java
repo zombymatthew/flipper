@@ -2,9 +2,14 @@ package com.zombymatthew.flipper.importer;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import static java.nio.file.StandardCopyOption.COPY_ATTRIBUTES;
+
 
 import com.drew.imaging.ImageMetadataReader;
 import com.drew.metadata.Directory;
@@ -57,16 +62,52 @@ public class PictureImporter extends Importer implements FlipperImporter
       }
         
       String newFilePath = getNewFilePath (file, dateTaken);
-      Path fullNewPath = destPath.resolve (newFilePath);
-      log.debug (fullNewPath.toString ());
- 
+      Path newPath = destPath.resolve (newFilePath);
+      newPath.toFile ().mkdirs ();
+      newPath = newPath.resolve (file.getName ());
+      Path origPath = Paths.get (file.toURI ());
+
+      try
+      {
+        copyFile (origPath, newPath);
+        verifyFile (origPath, newPath);
+        deleteOriginalFile (origPath);
+        success++;
+      }
+      catch (Exception ex)
+      {
+        log.error (ex);
+        failed++;
+        return;
+      }
+      log.debug (newPath.toString ());
     }
     else
     {
       log.debug ("Unknown file type: " + file.getAbsolutePath ());
+      failed++;
     }
   }
   
+  private boolean copyFile (Path origPath, Path newPath) throws IOException
+  {
+    log.debug ("Copying file " + origPath.toString () + " to " + newPath.toString ());
+    Files.copy (origPath, newPath, COPY_ATTRIBUTES);
+    return true;
+  }
+  
+  private boolean verifyFile (Path origPath, Path newPath)
+  {
+
+    return true;
+  }
+
+  private void deleteOriginalFile (Path origPath) throws Exception
+  {
+    Files.delete (origPath);
+ //TODO: delete any empty folders?
+  }
+
   private Date getDateTaken (File file)
   {
     try
@@ -122,8 +163,8 @@ public class PictureImporter extends Importer implements FlipperImporter
     sb.append (sdfMonth.format (dateTaken));
     sb.append (File.separator);
     sb.append (sdfDay.format (dateTaken));
-    sb.append (File.separator);
-    sb.append (file.getName ());
+    //sb.append (File.separator);
+    //sb.append (file.getName ());
     return sb.toString ();
   }
 }
