@@ -1,6 +1,7 @@
 package com.zombymatthew.flipper.importer;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.nio.file.Path;
 
 import com.zombymatthew.flipper.FlipperLog;
@@ -23,7 +24,16 @@ public abstract class Importer
     if (!directory.isDirectory ())
       log.error ("File found where a directory should be.");
     else
-      processFiles (directory.listFiles ());
+    {
+      final FilenameFilter filter = (dir, name) -> {
+        if (name.equals ("logs") || name.equalsIgnoreCase ("config.properties") || name.startsWith ("."))
+          return false;
+        else 
+          return true;
+      };
+      processFiles (directory.listFiles (filter));
+
+    }
   }
   
   protected void processFiles (File [] files)
